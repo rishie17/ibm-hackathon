@@ -1,6 +1,6 @@
 # Architecture
 
-RepoLens AI is a monorepo with a Next.js frontend and FastAPI backend.
+Aegis is a monorepo with a Next.js frontend and FastAPI backend.
 
 ```text
 /frontend      Next.js, TypeScript, Tailwind CSS, React Flow, Framer Motion

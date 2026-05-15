@@ -1,12 +1,12 @@
-# RepoLens AI Vision
+# Aegis Vision
 
-RepoLens AI is an intelligence layer for understanding, evolving, and modernizing software systems.
+Aegis is an intelligence layer for understanding, evolving, and modernizing software systems.
 
 The product metaphor is **Google Maps for codebases**. Developers should be able to zoom from a system-level map into a specific flow, dependency, risk zone, or modernization path without starting from raw files or scattered tribal knowledge.
 
 ## Product Thesis
 
-Large software systems fail to evolve safely when developers cannot see the architecture they are changing. RepoLens AI turns repositories into navigable maps:
+Large software systems fail to evolve safely when developers cannot see the architecture they are changing. Aegis turns repositories into navigable maps:
 
 - What exists?
 - How is it connected?
@@ -16,7 +16,7 @@ Large software systems fail to evolve safely when developers cannot see the arch
 
 ## Audience
 
-RepoLens AI is designed for:
+Aegis is designed for:
 
 - Developers onboarding into unfamiliar repositories.
 - Engineering leads planning refactors and migrations.
@@ -26,7 +26,7 @@ RepoLens AI is designed for:
 
 ## IBM Bob Alignment
 
-IBM Bob is strongest when it can reason across full repository context and support modernization workflows. RepoLens AI gives that reasoning a visual and operational surface:
+IBM Bob is strongest when it can reason across full repository context and support modernization workflows. Aegis gives that reasoning a visual and operational surface:
 
 - Repository maps make Bob's cross-file understanding visible.
 - Flow traces turn architecture reasoning into an interactive workflow.
@@ -35,5 +35,5 @@ IBM Bob is strongest when it can reason across full repository context and suppo
 
 ## North Star
 
-RepoLens AI should become an observability and intelligence layer for software systems, combining static repository analysis, graph intelligence, execution traces, and AI-guided modernization planning.
+Aegis should become an observability and intelligence layer for software systems, combining static repository analysis, graph intelligence, execution traces, and AI-guided modernization planning.
 

@@ -1,10 +1,10 @@
 # Context
 
-RepoLens AI is built for the IBM Bob Hackathon.
+Aegis is built for the IBM Bob Hackathon.
 
 ## Core Positioning
 
-RepoLens AI is:
+Aegis is:
 
 - Repository intelligence.
 - Architecture understanding.
@@ -14,7 +14,7 @@ RepoLens AI is:
 - Developer onboarding acceleration.
 - Impact analysis.
 
-RepoLens AI is not:
+Aegis is not:
 
 - A generic chatbot.
 - A code generator wrapper.

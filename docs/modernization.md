@@ -1,6 +1,6 @@
 # Modernization Strategy
 
-RepoLens AI treats modernization as an architecture workflow, not a generic code-generation task.
+Aegis treats modernization as an architecture workflow, not a generic code-generation task.
 
 ## Signals
 

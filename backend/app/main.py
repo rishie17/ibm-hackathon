@@ -5,8 +5,8 @@ from app.api.routes import router
 
 
 app = FastAPI(
-    title="RepoLens AI API",
-    description="Repository intelligence, architecture graphing, and modernization analysis.",
+    title="Aegis Intelligence API",
+    description="Operational intelligence for software modernization.",
     version="0.1.0",
 )
 
@@ -23,5 +23,5 @@ app.include_router(router, prefix="/api")
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ok", "service": "repolens-ai-api"}
+    return {"status": "ok", "service": "aegis-api"}
 
