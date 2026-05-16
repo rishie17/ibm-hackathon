@@ -8,7 +8,7 @@ node_modules/
 dist/
 build/
 *.db
-repolens.db
+aegis.db
 .env
 .env.local
 logs/

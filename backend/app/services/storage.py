@@ -2,7 +2,7 @@ import sqlite3
 from pathlib import Path
 
 
-DB_PATH = Path("repolens.db")
+DB_PATH = Path("aegis.db")
 
 
 def initialize_database(path: Path = DB_PATH) -> None:

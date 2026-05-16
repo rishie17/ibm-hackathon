@@ -8,7 +8,7 @@ import { AnalysisPanel } from "@/components/AnalysisPanel";
 import { DependencyGraph } from "@/components/DependencyGraph";
 import { MetricCard } from "@/components/MetricCard";
 import { analyzeRepository, traceFlow } from "@/lib/api";
-import type { AnalysisResponse, TraceResponse } from "@/types/repolens";
+import type { AnalysisResponse, TraceResponse } from "@/types/aegis";
 
 const emptyAnalysis: AnalysisResponse = {
   summary: {
@@ -47,7 +47,7 @@ export default function Home() {
       const result = await analyzeRepository(repoPath);
       setAnalysis(result);
       setTrace(null);
-      setStatus("Repository intelligence map generated");
+      setStatus("Intelligence map generated");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Analysis failed");
     } finally {
@@ -58,11 +58,11 @@ export default function Home() {
   async function handleTrace(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsLoading(true);
-    setStatus("Tracing flow...");
+    setStatus("Tracing dependencies...");
     try {
       const result = await traceFlow(query);
       setTrace(result);
-      setStatus("Flow trace complete");
+      setStatus("Trace complete");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Trace failed");
     } finally {
@@ -71,118 +71,125 @@ export default function Home() {
   }
 
   const highlightedFiles = trace?.impacted_files ?? [];
-  const languageSummary = Object.entries(analysis.summary.languages)
-    .map(([language, count]) => `${language}: ${count}`)
-    .join(" - ");
 
   return (
-    <main className="repolens-shell">
-      <div className="mx-auto flex max-w-[1500px] flex-col gap-6 px-5 py-5 lg:px-8">
-        <header className="flex flex-col gap-4 border-b border-slate-800 pb-5 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <div className="flex items-center gap-3 text-sm uppercase tracking-[0.18em] text-teal-200">
-              <Compass className="h-4 w-4" />
-              RepoLens AI
+    <main className="aegis-shell min-h-screen">
+      <div className="flex flex-col h-screen max-h-screen overflow-hidden">
+        {/* Compact Header */}
+        <header className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-slate-950/50 backdrop-blur-md z-10">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3">
+              <div className="h-6 w-6 rounded bg-teal-500 flex items-center justify-center">
+                <Compass className="h-4 w-4 text-slate-950" />
+              </div>
+              <h1 className="text-xl font-bold tracking-tight text-white uppercase">
+                Aegis <span className="text-white/20 font-light">//</span> Mission Control
+              </h1>
             </div>
-            <h1 className="mt-3 text-4xl font-semibold text-white lg:text-6xl">Google Maps for codebases.</h1>
-            <p className="mt-3 max-w-3xl text-base leading-7 text-slate-400">
-              Repository intelligence for architecture understanding, flow tracing, technical debt visibility,
-              and modernization planning.
-            </p>
+            
+            <form onSubmit={handleAnalyze} className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-sm px-3 py-1.5 focus-within:border-teal-500/50 transition-all">
+              <Map className="h-3 w-3 text-slate-500" />
+              <input
+                value={repoPath}
+                onChange={(e) => setRepoPath(e.target.value)}
+                className="bg-transparent text-xs text-white outline-none w-64"
+                placeholder="Target repository path..."
+              />
+              <button type="submit" disabled={isLoading} className="text-[10px] font-bold uppercase tracking-widest text-teal-400 hover:text-teal-300 disabled:opacity-50">
+                Scan
+              </button>
+            </form>
+
+            <form onSubmit={handleTrace} className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-sm px-3 py-1.5 focus-within:border-amber-500/50 transition-all">
+              <Search className="h-3 w-3 text-slate-500" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="bg-transparent text-xs text-white outline-none w-64"
+                placeholder="Trace operational flow..."
+              />
+              <button type="submit" disabled={isLoading} className="text-[10px] font-bold uppercase tracking-widest text-amber-400 hover:text-amber-300 disabled:opacity-50">
+                Trace
+              </button>
+            </form>
           </div>
-          <div className="rounded-lg border border-teal-300/30 bg-teal-300/10 px-4 py-3 text-sm text-teal-100">
-            {status}
+
+          <div className="flex items-center gap-4">
+            <div className="text-[10px] font-mono tracking-widest text-slate-500 uppercase border-r border-white/10 pr-4">
+              STATUS: <span className="text-teal-400">{status}</span>
+            </div>
+            <div className="flex gap-2">
+              <div className="h-2 w-2 rounded-full bg-teal-500 animate-pulse" />
+              <div className="h-2 w-2 rounded-full bg-slate-800" />
+              <div className="h-2 w-2 rounded-full bg-slate-800" />
+            </div>
           </div>
         </header>
 
-        <section className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
-          <form onSubmit={handleAnalyze} className="rounded-lg border border-slate-700/70 bg-slate-950/50 p-4">
-            <label className="text-sm font-medium text-white" htmlFor="repo-path">
-              Local repository path
-            </label>
-            <div className="mt-3 flex flex-col gap-3 sm:flex-row">
-              <input
-                id="repo-path"
-                value={repoPath}
-                onChange={(event) => setRepoPath(event.target.value)}
-                className="min-h-11 flex-1 rounded-md border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none transition focus:border-teal-300"
-                placeholder="C:\Users\you\project"
-              />
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-teal-300 px-4 text-sm font-semibold text-slate-950 transition hover:bg-teal-200 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <Map className="h-4 w-4" />
-                Analyze
-              </button>
+        {/* Main Operational Area */}
+        <div className="flex flex-1 overflow-hidden">
+          {/* Central Topology View */}
+          <div className="flex-1 relative bg-[#0f1115]">
+            <div className="absolute top-4 left-6 z-10">
+              <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 mb-1">Topology Workspace</div>
+              <div className="text-xs font-mono text-slate-400">{analysis.summary.root}</div>
             </div>
-          </form>
 
-          <form onSubmit={handleTrace} className="rounded-lg border border-slate-700/70 bg-slate-950/50 p-4">
-            <label className="text-sm font-medium text-white" htmlFor="query">
-              Architecture query
-            </label>
-            <div className="mt-3 flex flex-col gap-3 sm:flex-row">
-              <input
-                id="query"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                className="min-h-11 flex-1 rounded-md border border-slate-700 bg-slate-950 px-3 text-sm text-white outline-none transition focus:border-amber-300"
-              />
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-amber-300 px-4 text-sm font-semibold text-slate-950 transition hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <Search className="h-4 w-4" />
-                Trace
-              </button>
+            <div className="absolute top-4 right-6 z-10 flex gap-4">
+               <div className="glass-panel px-3 py-1.5 flex flex-col items-center min-w-[80px]">
+                 <span className="text-[8px] font-bold text-slate-500 uppercase">Nodes</span>
+                 <span className="text-sm font-mono text-slate-200">{analysis.graph.nodes.length}</span>
+               </div>
+               <div className="glass-panel px-3 py-1.5 flex flex-col items-center min-w-[80px]">
+                 <span className="text-[8px] font-bold text-slate-500 uppercase">Edges</span>
+                 <span className="text-sm font-mono text-slate-200">{analysis.graph.edges.length}</span>
+               </div>
             </div>
-          </form>
-        </section>
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <MetricCard label="Files analyzed" value={analysis.summary.files_analyzed} detail={languageSummary || "Awaiting repository analysis"} tone="accent" />
-          <MetricCard label="Total lines" value={analysis.summary.total_lines} detail="Source footprint across supported languages" />
-          <MetricCard label="Debt score" value={analysis.debt.debt_score} detail="Dependency, size, and fragility pressure" tone="warning" />
-          <MetricCard label="Modernization ready" value={`${analysis.debt.modernization_readiness}%`} detail="Initial readiness estimate" tone="accent" />
-        </section>
-
-        <section className="grid gap-5 xl:grid-cols-[1fr_420px]">
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-            <div className="flex flex-col gap-3 rounded-lg border border-slate-700/70 bg-slate-950/50 p-4 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <div className="flex items-center gap-2 text-sm font-semibold text-white">
-                  <GitPullRequestArrow className="h-4 w-4 text-teal-300" />
-                  Dependency Graph
-                </div>
-                <p className="mt-1 text-sm text-slate-400">{analysis.summary.root}</p>
-              </div>
-              <div className="text-sm text-slate-400">
-                {analysis.graph.nodes.length} modules - {analysis.graph.edges.length} relationships
-              </div>
+            <div className="h-full w-full">
+              <DependencyGraph graph={analysis.graph} highlightedFiles={highlightedFiles} />
             </div>
-            <DependencyGraph graph={analysis.graph} highlightedFiles={highlightedFiles} />
 
             {trace && (
-              <section className="rounded-lg border border-amber-300/30 bg-amber-300/10 p-4">
-                <div className="text-sm font-semibold text-white">Flow Trace</div>
-                <p className="mt-2 text-sm leading-6 text-slate-300">{trace.summary}</p>
-                <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  {trace.steps.map((step) => (
-                    <div key={step.file} className="rounded-md border border-slate-700/70 bg-slate-950/50 p-3">
-                      <div className="truncate text-sm font-medium text-white">{step.file}</div>
-                      <div className="mt-2 text-sm leading-5 text-slate-400">{step.reason}</div>
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="absolute bottom-6 left-6 right-6 max-h-48 glass-panel border-amber-500/30 p-4 overflow-y-auto z-10"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400">Dependency Flow Path</div>
+                  <button onClick={() => setTrace(null)} className="text-[10px] text-slate-500 hover:text-white uppercase">Close</button>
+                </div>
+                <div className="flex gap-4 overflow-x-auto pb-2">
+                  {trace.steps.map((step, idx) => (
+                    <div key={step.file} className="min-w-[200px] glass-panel p-3 border-white/5 bg-white/[0.02]">
+                       <div className="flex items-center gap-2 mb-2">
+                         <span className="text-[9px] font-mono text-slate-600">0{idx + 1}</span>
+                         <div className="truncate text-[10px] font-bold text-white uppercase">{step.file.split('/').pop()}</div>
+                       </div>
+                       <div className="text-[10px] text-slate-500 line-clamp-2 leading-relaxed">{step.reason}</div>
                     </div>
                   ))}
                 </div>
-              </section>
+              </motion.div>
             )}
-          </motion.div>
+          </div>
 
-          <AnalysisPanel debt={analysis.debt} modernization={analysis.modernization} />
-        </section>
+          {/* Side Intelligence Panel */}
+          <aside className="w-[400px] border-l border-white/5 bg-slate-950/40 backdrop-blur-xl overflow-y-auto p-6 space-y-8">
+            <section>
+              <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 mb-6 border-b border-white/5 pb-2">System Metrics</div>
+              <div className="grid grid-cols-2 gap-4">
+                <MetricCard label="Modules" value={analysis.summary.files_analyzed} detail="Source Files" tone="accent" />
+                <MetricCard label="Volume" value={`${(analysis.summary.total_lines / 1000).toFixed(1)}k`} detail="Lines of Code" />
+                <MetricCard label="Pressure" value={analysis.debt.debt_score} detail="Graph Fragility" tone="warning" />
+                <MetricCard label="Readiness" value={`${analysis.debt.modernization_readiness}%`} detail="Modernization" tone="accent" />
+              </div>
+            </section>
+
+            <AnalysisPanel debt={analysis.debt} modernization={analysis.modernization} />
+          </aside>
+        </div>
       </div>
     </main>
   );

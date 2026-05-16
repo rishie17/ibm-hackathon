@@ -1,44 +1,45 @@
-# RepoLens AI
+# Aegis
 
-**An intelligence layer for understanding, evolving, and modernizing software systems.**
+**Operational intelligence for software modernization.**
 
-RepoLens AI is built for the IBM Bob Hackathon as **Google Maps for codebases**: a visual, interactive way to understand repositories, trace feature flows, identify technical debt, and plan modernization work.
+Aegis is an architectural observability platform designed to transform complex, undocumented software systems into understandable operational structures. Built for the IBM Bob Hackathon, it provides a "mission control" interface for identifying risk, tracing behavior, and planning the safe evolution of legacy systems.
 
 ![Dashboard screenshot placeholder](docs/assets/dashboard-placeholder.png)
-![Dependency graph screenshot placeholder](docs/assets/graph-placeholder.png)
 
-## Why It Exists
+## The Core Thesis
 
-Modern software teams inherit large systems where architecture is implicit, dependencies are hard to reason about, and modernization is risky. RepoLens AI turns a repository into a navigable intelligence map:
+Modernization fails primarily because organizations lose visibility into operational behavior. Legacy systems become "black boxes" where architecture is implicit and dependencies are hidden. 
 
-- See modules and dependencies.
-- Trace feature and execution flows.
-- Identify risk zones and hotspots.
-- Understand technical debt drivers.
-- Generate modernization recommendations.
-- Accelerate onboarding into unfamiliar codebases.
+**Aegis restores visibility.** 
 
-## MVP Features
+It turns repositories into navigable intelligence maps, allowing teams to see the "blast radius" of changes, understand the fragility of their architecture, and modernize with deterministic confidence.
 
-- Local repository selection by path.
-- Python, JavaScript, and TypeScript source traversal.
-- Import extraction and dependency relationship generation.
-- NetworkX-backed dependency graph.
-- React Flow architecture visualization.
-- Natural language flow tracing interface.
-- Technical debt scoring for coupling, cycles, and module size.
-- Modernization suggestions and migration roadmap.
-- AI-readable documentation for rapid iteration.
+## Key Capabilities
+
+- **Architectural Topology:** Reconstructs system hierarchy using real module resolution (Python & JS/TS) and Dagre-powered layouts.
+- **Transitive Blast Radius:** Recursive graph traversal that illuminates the deep "ripple effect" of changes across the system.
+- **Deterministic Flow Tracing:** Reconstructs operational pathways based on actual dependency chains (upstream consumers and downstream dependencies).
+- **Graph-Derived Intelligence:** Detects structural fragility, God Modules, and cyclic coupling using real NetworkX centrality and density metrics.
+- **Modernization Mission Control:** A high-end observability interface where the dependency graph dominates the workflow.
+- **Institutional Memory Recovery:** Turns undocumented codebases into observable architectural knowledge with deterministic confidence.
+
+## Visual Philosophy: Mission Control
+
+Aegis is designed with a cinematic, high-end observability aesthetic. The interface feels alive—pulsing with system activity and illuminating architectural density through motion and light.
+
+- **Hierarchical Dependency Graphs:** Interactive, glowing topologies with automated layered layouts.
+- **Recursive Blast Radius:** Click any node to witness its operational impact propagate transitively through the entire system.
+- **Semantic Node Categorization:** Instant visibility into Service Layers, Infrastructure, and Utilities through visual hierarchy.
 
 ## Architecture
 
 ```text
-RepoLens AI
-|-- frontend/      Next.js, TypeScript, Tailwind CSS, React Flow, Framer Motion
-|-- backend/       FastAPI, Python 3.11+, Pydantic, NetworkX, Tree-sitter-ready parser layer
-|-- docs/          Architecture, workflows, modernization, and project context
-|-- examples/      Demo repositories and fixtures
-`-- bob-sessions/  IBM Bob prompts, outputs, and modernization session notes
+Aegis
+|-- frontend/      Next.js, TypeScript, React Flow (Customized), Framer Motion, Tailwind CSS
+|-- backend/       FastAPI, Python 3.11+, NetworkX (Graph Intelligence), Tree-sitter
+|-- docs/          Strategic analysis, architecture, and modernization workflows
+|-- examples/      Demo repositories for analysis
+`-- bob-sessions/  IBM Bob modernization artifacts and session logs
 ```
 
 ## Quick Start
@@ -63,62 +64,25 @@ npm --prefix frontend run dev
 
 The app runs on `http://localhost:3000`.
 
-## Demo Flow
+## Demo Narrative
 
-1. Start the backend and frontend.
-2. Enter `examples` or a local repository path.
-3. Click **Analyze** to generate the architecture map.
-4. Inspect files, edges, health indicators, debt, and modernization readiness.
-5. Ask `Explain authentication flow` or `Find tightly coupled modules`.
-6. Watch graph nodes highlight around likely impacted files.
-7. Use modernization recommendations to narrate a safe evolution plan.
+1. **Initialize Scan:** Enter a repository path (e.g., `examples`) and click **Initialize Scan**.
+2. **Observe Topology:** Watch the cinematic dependency graph reconstruct the system architecture.
+3. **Analyze Pressure:** Check the **Fragility Intelligence** panel for modernization bottlenecks.
+4. **Simulate Impact:** Click a critical module to witness the **Blast Radius** propagate outward.
+5. **Trace Flow:** Query "How does payment validation work?" to see the operational flow reconstructed.
+6. **Plan Evolution:** Use the **Modernization Moves** to narrate a safe, phased migration strategy.
 
-## API Surface
+## IBM Bob Integration
 
-- `GET /health`
-- `POST /api/repositories/analyze`
-- `GET /api/graph`
-- `POST /api/trace`
-- `GET /api/debt`
-- `GET /api/modernization`
-
-## IBM Bob Alignment
-
-RepoLens AI complements IBM Bob by giving full-repository reasoning a visual and workflow-driven surface:
-
-- Bob can reason across the repository.
-- RepoLens AI turns that reasoning into maps, traces, scores, and modernization plans.
-- Bob sessions can be captured in `/bob-sessions` for repeatable SDLC artifacts.
-- Modernization recommendations can become phased implementation plans.
-
-TODO(IBM Bob): add a Bob adapter that enriches graph context, trace explanations, and modernization roadmaps with Bob's full-context repository reasoning.
+Aegis acts as the visual and structural "brain" for IBM Bob's repository reasoning. While Bob provides deep semantic understanding, Aegis provides the topological context and operational visibility required for enterprise-grade modernization decisions.
 
 ## Roadmap
 
-### Phase 1
+- **Phase 1 (Complete):** Architectural observability, dependency graphing, and cinematic UI.
+- **Phase 2:** Deep symbol extraction with Tree-sitter, cross-service call tracing, and PR impact summaries.
+- **Phase 3:** GitHub integration, runtime observability overlays, and automated migration sidecars.
 
-- Repository parsing.
-- Dependency graph generation.
-- FastAPI backend APIs.
-- Next.js dashboard shell.
-- React Flow visualization.
+---
 
-### Phase 2
-
-- Tree-sitter symbol extraction.
-- Function-level call graphs.
-- Stronger impact analysis.
-- Technical debt trend history in SQLite.
-- IBM Bob modernization plan integration.
-
-### Phase 3
-
-- GitHub repository ingestion.
-- Runtime trace overlays.
-- Pull request impact summaries.
-- Team ownership and service boundary maps.
-- Enterprise modernization dashboards.
-
-## Project Identity
-
-RepoLens AI is not another chatbot and not another code generator. It is an observability and intelligence layer for software systems.
+**Aegis: Modernization should not require losing institutional memory.**

@@ -1,7 +1,7 @@
 export type GraphNode = {
   id: string;
   label: string;
-  type: "module" | "service" | "folder" | "hotspot";
+  type: "module" | "service" | "infrastructure" | "utility" | "folder" | "hotspot" | "hardware";
   risk: number;
   metadata: Record<string, string | number>;
 };
@@ -66,6 +66,14 @@ export type TraceResponse = {
     related_imports: string[];
   }>;
   impacted_files: string[];
+};
+
+export type BlastRadiusResponse = {
+  root_id: string;
+  impacted_nodes: string[];
+  impacted_edges: string[];
+  layers: Record<string, number>;
+  intensity: Record<string, number>;
 };
 
 export type AnalysisResponse = {

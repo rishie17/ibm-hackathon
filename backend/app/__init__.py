@@ -1,2 +1,2 @@
-"""RepoLens AI backend package."""
+"""Aegis Intelligence backend package."""
 

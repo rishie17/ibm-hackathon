@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException
 from app.models.schemas import (
     AnalysisResponse,
     AnalyzeRepositoryRequest,
+    BlastRadiusResponse,
     GraphResponse,
     ModernizationResponse,
     QueryRequest,
@@ -43,4 +44,9 @@ def get_debt() -> TechnicalDebtResponse:
 @router.get("/modernization", response_model=ModernizationResponse)
 def get_modernization() -> ModernizationResponse:
     return analysis_service.get_modernization()
+
+
+@router.get("/blast-radius/{node_id:path}", response_model=BlastRadiusResponse)
+def compute_blast_radius(node_id: str) -> BlastRadiusResponse:
+    return analysis_service.compute_blast_radius(node_id)
 
