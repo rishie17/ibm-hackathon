@@ -7,9 +7,20 @@ class DependencyGraphBuilder:
     def build(self, analysis: RepositoryAnalysis) -> tuple[nx.DiGraph, GraphResponse]:
         graph = nx.DiGraph()
 
+        domains = set()
+
         for file in analysis.files:
             risk = self._node_risk(file.lines, len(file.imports) + len(file.instantiations))
-            graph.add_node(file.path, label=file.path.split("/")[-1], risk=risk, file=file)
+            
+            # Determine cluster (domain) based on the top-level directory
+            parts = file.path.split("/")
+            parent_id = None
+            if len(parts) > 1:
+                domain_name = parts[0]
+                parent_id = f"domain-{domain_name}"
+                domains.add(parent_id)
+                
+            graph.add_node(file.path, label=file.path.split("/")[-1], risk=risk, file=file, parent_id=parent_id)
 
         for dependency in analysis.dependencies:
             graph.add_edge(
@@ -23,19 +34,33 @@ class DependencyGraphBuilder:
         centrality = nx.degree_centrality(graph) if graph.number_of_nodes() > 0 else {}
         
         # Calculate hierarchy levels (Topological Sort / Longest Path approximation)
-        # To avoid cycles breaking it, we can just do a simple BFS from roots (in-degree == 0)
-        # or just use topological generations if DAG.
         levels = {}
         try:
             for i, generation in enumerate(nx.topological_generations(graph)):
                 for node in generation:
                     levels[node] = i
         except nx.NetworkXUnfeasible:
-            # Graph has cycles, fallback to 0
             levels = {node: 0 for node in graph.nodes}
 
         nodes = []
+        for d in domains:
+            domain_label = d.replace("domain-", "").title()
+            # Add to graph so it exists for traversals (even if no edges)
+            graph.add_node(d, label=domain_label, type="domain", risk=0.0, file=None)
+            nodes.append(
+                GraphNode(
+                    id=d,
+                    label=domain_label,
+                    type="domain",
+                    risk=0.0,
+                    metadata={}
+                )
+            )
+
         for node, data in graph.nodes(data=True):
+            if data.get("file") is None:
+                continue # Skip any nodes that are not files (just in case)
+                
             node_type = self._determine_node_type(node, data, graph)
             file_data = data["file"]
             nodes.append(
@@ -44,6 +69,7 @@ class DependencyGraphBuilder:
                     label=data["label"],
                     type=node_type,
                     risk=round(data["risk"], 2),
+                    parent_id=data.get("parent_id"),
                     metadata={
                         "lines": file_data.lines,
                         "imports": len(file_data.imports),

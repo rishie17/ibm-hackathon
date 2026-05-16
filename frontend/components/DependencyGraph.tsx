@@ -15,6 +15,7 @@ import {
 } from "@xyflow/react";
 import { useCallback, useEffect, useMemo } from "react";
 
+import { AegisDomain } from "@/components/AegisDomain";
 import { AegisEdge } from "@/components/AegisEdge";
 import { AegisNode } from "@/components/AegisNode";
 import type { GraphResponse } from "@/types/aegis";
@@ -25,7 +26,8 @@ type DependencyGraphProps = {
 };
 
 const nodeTypes = {
-  aegisNode: AegisNode
+  aegisNode: AegisNode,
+  aegisDomain: AegisDomain
 };
 
 const edgeTypes = {
@@ -36,13 +38,20 @@ const NODE_WIDTH = 280;
 const NODE_HEIGHT = 120;
 
 const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = "TB") => {
-  const dagreGraph = new dagre.graphlib.Graph();
+  const dagreGraph = new dagre.graphlib.Graph({ compound: true });
   dagreGraph.setDefaultEdgeLabel(() => ({}));
   // Extreme spacing for cinematic rhythm
   dagreGraph.setGraph({ rankdir: direction, ranksep: 240, nodesep: 140 });
 
   nodes.forEach((node) => {
-    dagreGraph.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
+    if (node.type === "aegisDomain") {
+      dagreGraph.setNode(node.id, { label: node.data.label });
+    } else {
+      dagreGraph.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
+      if (node.parentNode) {
+        dagreGraph.setParent(node.id, node.parentNode);
+      }
+    }
   });
 
   edges.forEach((edge) => {
@@ -53,12 +62,30 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = "TB") => 
 
   const layoutedNodes = nodes.map((node) => {
     const nodeWithPosition = dagreGraph.node(node.id);
+    
+    if (node.type === "aegisDomain") {
+      return {
+        ...node,
+        position: { 
+          x: nodeWithPosition.x - nodeWithPosition.width / 2, 
+          y: nodeWithPosition.y - nodeWithPosition.height / 2 
+        },
+        style: { width: nodeWithPosition.width, height: nodeWithPosition.height, zIndex: -1 }
+      };
+    }
+
+    let x = nodeWithPosition.x - NODE_WIDTH / 2;
+    let y = nodeWithPosition.y - NODE_HEIGHT / 2;
+
+    if (node.parentNode) {
+      const parentPos = dagreGraph.node(node.parentNode);
+      x -= (parentPos.x - parentPos.width / 2);
+      y -= (parentPos.y - parentPos.height / 2);
+    }
+
     return {
       ...node,
-      position: {
-        x: nodeWithPosition.x - NODE_WIDTH / 2,
-        y: nodeWithPosition.y - NODE_HEIGHT / 2
-      }
+      position: { x, y }
     };
   });
 
@@ -81,12 +108,14 @@ export function DependencyGraph({ graph, highlightedFiles }: DependencyGraphProp
 
     const initialNodes: Node[] = graph.nodes.map((node) => ({
       id: node.id,
-      type: "aegisNode",
+      type: node.type === "domain" ? "aegisDomain" : "aegisNode",
       position: { x: 0, y: 0 },
+      parentNode: node.parent_id || undefined,
       data: {
         label: node.label,
         type: node.type,
         metadata: node.metadata,
+        risk: node.risk,
         isBlastRadius: false
       }
     }));
@@ -96,7 +125,7 @@ export function DependencyGraph({ graph, highlightedFiles }: DependencyGraphProp
       source: edge.source,
       target: edge.target,
       type: "aegisEdge",
-      animated: highlighted.has(edge.source) || highlighted.has(edge.target),
+      animated: false,
       data: { label: edge.label }
     }));
 
@@ -107,7 +136,41 @@ export function DependencyGraph({ graph, highlightedFiles }: DependencyGraphProp
 
     setNodes(layoutedNodes);
     setEdges(layoutedEdges);
-  }, [graph, highlighted, setNodes, setEdges]);
+  }, [graph, setNodes, setEdges]);
+
+  // Handle flow tracing highlighting without resetting layout
+  useEffect(() => {
+    if (graph.nodes.length === 0) return;
+
+    setEdges((eds) => 
+      eds.map((edge) => {
+        const isHighlighted = highlighted.has(edge.source) || highlighted.has(edge.target);
+        return {
+          ...edge,
+          animated: isHighlighted,
+          style: {
+            ...edge.style,
+            opacity: highlighted.size > 0 && !isHighlighted ? 0.1 : 1,
+            stroke: isHighlighted ? "#d97706" : undefined // amber-600 for trace
+          }
+        };
+      })
+    );
+
+    setNodes((nds) => 
+      nds.map((node) => {
+        const isHighlighted = highlighted.has(node.id);
+        const isDomain = node.type === "aegisDomain";
+        return {
+          ...node,
+          style: {
+            ...node.style,
+            opacity: highlighted.size > 0 && !isHighlighted && !isDomain ? 0.2 : 1
+          }
+        };
+      })
+    );
+  }, [highlighted, setEdges, setNodes, graph.nodes.length]);
 
   const onSelectionChange = useCallback(
     async ({ nodes: selectedNodes }: OnSelectionChangeParams) => {
@@ -141,6 +204,8 @@ export function DependencyGraph({ graph, highlightedFiles }: DependencyGraphProp
           nds.map((node) => {
             const isInRadius = impactedNodes.has(node.id);
             const intensity = blast.intensity[node.id] ?? 0;
+            const isDomain = node.type === "aegisDomain";
+            
             return {
               ...node,
               data: { 
@@ -150,7 +215,7 @@ export function DependencyGraph({ graph, highlightedFiles }: DependencyGraphProp
               },
               style: { 
                 ...node.style, 
-                opacity: isInRadius ? 1 : 0.2 
+                opacity: isInRadius || isDomain ? 1 : 0.1 
               }
             };
           })

@@ -45,6 +45,7 @@ class GraphNode(BaseModel):
     ownership: str = ""
     level: int = 0
     risk: float = 0.0
+    parent_id: str | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 

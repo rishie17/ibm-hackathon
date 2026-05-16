@@ -1,9 +1,10 @@
 export type GraphNode = {
   id: string;
   label: string;
-  type: "module" | "service" | "infrastructure" | "utility" | "folder" | "hotspot" | "hardware";
+  type: "module" | "service" | "infrastructure" | "utility" | "folder" | "hotspot" | "hardware" | "domain";
   risk: number;
-  metadata: Record<string, string | number>;
+  parent_id?: string | null;
+  metadata: Record<string, any>;
 };
 
 export type GraphEdge = {
