@@ -2,90 +2,80 @@
 
 import { Handle, Position } from "@xyflow/react";
 import { motion } from "framer-motion";
-import { Cpu, FileCode2, Layers } from "lucide-react";
+import { Activity, Box, Cpu, Database, FileCode2, Layers, Microchip, Zap } from "lucide-react";
 
 type AegisNodeData = {
   label: string;
-  type: "module" | "hotspot";
+  type: "module" | "service" | "infrastructure" | "utility" | "hotspot" | "hardware";
   metadata: {
     language: string;
     lines: number;
+    centrality?: number;
+    in_degree?: number;
+    out_degree?: number;
   };
   isBlastRadius?: boolean;
-  isSource?: boolean;
+  intensity?: number;
+};
+
+const TYPE_CONFIG = {
+  service: { icon: Activity, color: "text-blue-400", label: "Service Layer", border: "border-blue-500/20" },
+  infrastructure: { icon: Database, color: "text-purple-400", label: "Infrastructure", border: "border-purple-500/20" },
+  utility: { icon: Box, color: "text-slate-400", label: "Utility Module", border: "border-slate-500/20" },
+  hotspot: { icon: Cpu, color: "text-rose-400", label: "Critical Hotspot", border: "border-rose-500/30" },
+  hardware: { icon: Microchip, color: "text-emerald-400", label: "Hardware Module", border: "border-emerald-500/20" },
+  module: { icon: Layers, color: "text-slate-300", label: "System Module", border: "border-white/5" }
 };
 
 export function AegisNode({ data, selected }: { data: AegisNodeData; selected: boolean }) {
-  const isHotspot = data.type === "hotspot";
+  const config = TYPE_CONFIG[data.type] || TYPE_CONFIG.module;
+  const Icon = config.icon;
+  const intensity = data.intensity ?? 0;
   
   return (
     <motion.div
-      initial={{ scale: 0.9, opacity: 0 }}
+      initial={{ scale: 0.95, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
-      className={`relative px-4 py-3 rounded-sm min-w-[200px] border transition-all duration-500 ${
+      whileHover={{ scale: 1.01, transition: { duration: 0.15 } }}
+      className={`relative px-4 py-3 rounded-md min-w-[220px] border transition-all duration-300 bg-slate-900/80 backdrop-blur-md ${
         selected 
-          ? "glass-panel-strong border-warning/50 shadow-[0_0_20px_rgba(248,184,78,0.2)]" 
+          ? "border-amber-400/60 shadow-[0_0_12px_rgba(251,191,36,0.1)]" 
           : data.isBlastRadius
-          ? "glass-panel border-warning/30 shadow-[0_0_15px_rgba(248,184,78,0.1)]"
-          : isHotspot
-          ? "glass-panel border-danger/40"
-          : "glass-panel border-white/10"
+          ? `border-amber-500/${Math.max(20, Math.floor(intensity * 100))}`
+          : config.border
       }`}
     >
-      {/* Selection Glow */}
-      {selected && (
-        <motion.div
-          layoutId="glow"
-          className="absolute inset-0 rounded-sm bg-warning/5 blur-xl -z-10"
-          animate={{ opacity: [0.5, 0.8, 0.5] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        />
-      )}
-
-      {/* Pulse for Hotspots */}
-      {isHotspot && !selected && (
-        <motion.div
-          className="absolute inset-0 rounded-sm border border-danger/30 -z-10"
-          animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0, 0.5] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        />
-      )}
-
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-2">
-          {isHotspot ? (
-            <Cpu className="h-3.5 w-3.5 text-danger" />
-          ) : (
-            <Layers className="h-3.5 w-3.5 text-teal-400" />
-          )}
-          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            {isHotspot ? "Critical Hotspot" : "System Module"}
+          <Icon className={`h-3.5 w-3.5 ${config.color}`} />
+          <span className="text-[10px] font-medium tracking-wide text-slate-400">
+            {config.label}
           </span>
         </div>
-        <div className="flex items-center gap-1.5 px-1.5 py-0.5 rounded bg-white/5 border border-white/5">
-          <FileCode2 className="h-3 w-3 text-slate-400" />
-          <span className="text-[9px] font-mono text-slate-400 uppercase">{data.metadata.language}</span>
-        </div>
+        {data.metadata.centrality !== undefined && data.metadata.centrality > 0.1 && (
+          <div className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm bg-slate-800 border border-slate-700">
+            <Zap className="h-2.5 w-2.5 text-amber-500/80" />
+            <span className="text-[9px] font-mono text-slate-300">CORE</span>
+          </div>
+        )}
       </div>
 
       <div className="mt-3">
-        <div className={`text-sm font-bold tracking-tight truncate ${selected ? "text-warning" : "text-white"}`}>
+        <div className={`text-sm font-semibold tracking-tight truncate ${selected ? "text-amber-400" : "text-slate-100"}`}>
           {data.label}
         </div>
-        <div className="mt-1 text-[10px] font-mono text-slate-500">
-          SIZE: {data.metadata.lines.toLocaleString()} LOC
+        <div className="mt-1.5 flex items-center justify-between">
+          <div className="text-[10px] font-mono text-slate-500">
+            {data.metadata.lines.toLocaleString()} LOC
+          </div>
+          <div className="text-[9px] font-mono text-slate-500">
+            IN:{data.metadata.in_degree} OUT:{data.metadata.out_degree}
+          </div>
         </div>
       </div>
 
-      {/* Decorative dots */}
-      <div className="absolute bottom-1 right-1 flex gap-0.5">
-        <div className={`h-0.5 w-0.5 rounded-full ${selected ? "bg-warning" : "bg-slate-700"}`} />
-        <div className={`h-0.5 w-0.5 rounded-full ${selected ? "bg-warning/50" : "bg-slate-800"}`} />
-      </div>
-
-      <Handle type="target" position={Position.Top} className="!bg-slate-700 !border-none !w-2 !h-1 !rounded-none" />
-      <Handle type="source" position={Position.Bottom} className="!bg-teal-500 !border-none !w-2 !h-1 !rounded-none shadow-[0_0_5px_var(--accent)]" />
+      <Handle type="target" position={Position.Top} className="!bg-slate-500 !border-slate-800 !w-2 !h-2 !rounded-full" />
+      <Handle type="source" position={Position.Bottom} className="!bg-slate-500 !border-slate-800 !w-2 !h-2 !rounded-full" />
     </motion.div>
   );
 }

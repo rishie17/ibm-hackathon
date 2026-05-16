@@ -25,3 +25,12 @@ app.include_router(router, prefix="/api")
 def health() -> dict[str, str]:
     return {"status": "ok", "service": "aegis-api"}
 
+
+@app.get("/")
+def root() -> dict[str, str]:
+    return {
+        "message": "Welcome to the Aegis Intelligence API",
+        "docs": "/docs",
+        "health": "/health",
+    }
+

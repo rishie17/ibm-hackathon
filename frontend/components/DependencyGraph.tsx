@@ -1,5 +1,7 @@
 "use client";
 
+import { fetchBlastRadius } from "@/lib/api";
+import dagre from "dagre";
 import {
   Background,
   Controls,
@@ -30,6 +32,38 @@ const edgeTypes = {
   aegisEdge: AegisEdge
 };
 
+const NODE_WIDTH = 240;
+const NODE_HEIGHT = 90;
+
+const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = "TB") => {
+  const dagreGraph = new dagre.graphlib.Graph();
+  dagreGraph.setDefaultEdgeLabel(() => ({}));
+  dagreGraph.setGraph({ rankdir: direction, ranksep: 160, nodesep: 100 });
+
+  nodes.forEach((node) => {
+    dagreGraph.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
+  });
+
+  edges.forEach((edge) => {
+    dagreGraph.setEdge(edge.source, edge.target);
+  });
+
+  dagre.layout(dagreGraph);
+
+  const layoutedNodes = nodes.map((node) => {
+    const nodeWithPosition = dagreGraph.node(node.id);
+    return {
+      ...node,
+      position: {
+        x: nodeWithPosition.x - NODE_WIDTH / 2,
+        y: nodeWithPosition.y - NODE_HEIGHT / 2
+      }
+    };
+  });
+
+  return { nodes: layoutedNodes, edges };
+};
+
 export function DependencyGraph({ graph, highlightedFiles }: DependencyGraphProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -38,13 +72,16 @@ export function DependencyGraph({ graph, highlightedFiles }: DependencyGraphProp
 
   // Initialize nodes and edges when graph data changes
   useEffect(() => {
-    const newNodes: Node[] = graph.nodes.map((node, index) => ({
+    if (graph.nodes.length === 0) {
+      setNodes([]);
+      setEdges([]);
+      return;
+    }
+
+    const initialNodes: Node[] = graph.nodes.map((node) => ({
       id: node.id,
       type: "aegisNode",
-      position: {
-        x: (index % 4) * 300,
-        y: Math.floor(index / 4) * 180
-      },
+      position: { x: 0, y: 0 },
       data: {
         label: node.label,
         type: node.type,
@@ -53,7 +90,7 @@ export function DependencyGraph({ graph, highlightedFiles }: DependencyGraphProp
       }
     }));
 
-    const newEdges: Edge[] = graph.edges.map((edge) => ({
+    const initialEdges: Edge[] = graph.edges.map((edge) => ({
       id: edge.id,
       source: edge.source,
       target: edge.target,
@@ -62,18 +99,23 @@ export function DependencyGraph({ graph, highlightedFiles }: DependencyGraphProp
       data: { label: edge.label }
     }));
 
-    setNodes(newNodes);
-    setEdges(newEdges);
+    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+      initialNodes,
+      initialEdges
+    );
+
+    setNodes(layoutedNodes);
+    setEdges(layoutedEdges);
   }, [graph, highlighted, setNodes, setEdges]);
 
   const onSelectionChange = useCallback(
-    ({ nodes: selectedNodes }: OnSelectionChangeParams) => {
+    async ({ nodes: selectedNodes }: OnSelectionChangeParams) => {
       if (selectedNodes.length === 0) {
         // Reset blast radius
         setNodes((nds) =>
           nds.map((node) => ({
             ...node,
-            data: { ...node.data, isBlastRadius: false },
+            data: { ...node.data, isBlastRadius: false, intensity: 1.0 },
             style: { ...node.style, opacity: 1 }
           }))
         );
@@ -88,46 +130,53 @@ export function DependencyGraph({ graph, highlightedFiles }: DependencyGraphProp
       }
 
       const selectedId = selectedNodes[0].id;
-      const blastRadiusNodes = new Set<string>([selectedId]);
-      const blastRadiusEdges = new Set<string>();
+      
+      try {
+        const blast = await fetchBlastRadius(selectedId);
+        const impactedNodes = new Set(blast.impacted_nodes);
+        const impactedEdges = new Set(blast.impacted_edges);
 
-      // Simple one-level BFS for blast radius propagation
-      // In a real app, this would be a deep traversal
-      graph.edges.forEach((edge) => {
-        if (edge.source === selectedId) {
-          blastRadiusNodes.add(edge.target);
-          blastRadiusEdges.add(edge.id);
-        }
-      });
+        setNodes((nds) =>
+          nds.map((node) => {
+            const isInRadius = impactedNodes.has(node.id);
+            const intensity = blast.intensity[node.id] ?? 0;
+            return {
+              ...node,
+              data: { 
+                ...node.data, 
+                isBlastRadius: isInRadius && node.id !== selectedId,
+                intensity: intensity
+              },
+              style: { 
+                ...node.style, 
+                opacity: isInRadius ? 1 : 0.2 
+              }
+            };
+          })
+        );
 
-      setNodes((nds) =>
-        nds.map((node) => {
-          const isInRadius = blastRadiusNodes.has(node.id);
-          return {
-            ...node,
-            data: { ...node.data, isBlastRadius: isInRadius },
-            style: { ...node.style, opacity: isInRadius || selectedNodes.length === 0 ? 1 : 0.3 }
-          };
-        })
-      );
-
-      setEdges((eds) =>
-        eds.map((edge) => {
-          const isInRadius = blastRadiusEdges.has(edge.id);
-          return {
-            ...edge,
-            selected: isInRadius,
-            style: { ...edge.style, opacity: isInRadius || selectedNodes.length === 0 ? 1 : 0.1 }
-          };
-        })
-      );
+        setEdges((eds) =>
+          eds.map((edge) => {
+            const isInRadius = impactedEdges.has(edge.id);
+            return {
+              ...edge,
+              selected: isInRadius,
+              style: { 
+                ...edge.style, 
+                opacity: isInRadius ? 1 : 0.05 
+              }
+            };
+          })
+        );
+      } catch (error) {
+        console.error("Failed to fetch blast radius:", error);
+      }
     },
-    [graph.edges, setNodes, setEdges]
+    [setNodes, setEdges]
   );
 
   return (
-    <div className="h-[600px] overflow-hidden rounded-sm glass-panel border-white/5 relative">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(79,209,197,0.05),transparent_70%)] pointer-events-none" />
+    <div className="h-full w-full overflow-hidden bg-transparent relative">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -138,15 +187,16 @@ export function DependencyGraph({ graph, highlightedFiles }: DependencyGraphProp
         edgeTypes={edgeTypes}
         fitView
         minZoom={0.1}
-        maxZoom={1.5}
+        maxZoom={1.2}
       >
-        <Background color="rgba(255,255,255,0.03)" gap={20} />
+        <Background color="rgba(255,255,255,0.05)" gap={24} size={1} />
         <MiniMap 
-          nodeStrokeWidth={3} 
+          nodeStrokeWidth={2} 
           pannable 
           zoomable 
-          nodeColor={(n) => (n.data.type === "hotspot" ? "var(--danger)" : "var(--accent)")}
-          maskColor="rgba(0,0,0,0.6)"
+          nodeColor={(n) => (n.data.type === "hotspot" ? "#f87171" : "#334155")}
+          maskColor="rgba(15, 23, 42, 0.8)"
+          style={{ background: "rgba(15, 23, 42, 0.9)", border: "1px solid rgba(255,255,255,0.08)" }}
         />
         <Controls />
       </ReactFlow>

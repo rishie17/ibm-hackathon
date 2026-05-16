@@ -16,20 +16,20 @@ It turns repositories into navigable intelligence maps, allowing teams to see th
 
 ## Key Capabilities
 
-- **Architecture Intelligence:** Reconstructs system topology and dependency relationships.
-- **Execution Flow Tracing:** Traces operational pathways via natural language queries.
-- **Blast Radius Analysis:** Visually illuminates impacted services and modules during change simulations.
-- **Technical Pressure Scoring:** Detects structural fragility, cyclic coupling, and modernization bottlenecks.
-- **Modernization Intelligence:** Generates incremental, low-risk migration paths and roadmaps.
-- **Institutional Memory Recovery:** Turns undocumented codebases into observable organizational knowledge.
+- **Architectural Topology:** Reconstructs system hierarchy using real module resolution (Python & JS/TS) and Dagre-powered layouts.
+- **Transitive Blast Radius:** Recursive graph traversal that illuminates the deep "ripple effect" of changes across the system.
+- **Deterministic Flow Tracing:** Reconstructs operational pathways based on actual dependency chains (upstream consumers and downstream dependencies).
+- **Graph-Derived Intelligence:** Detects structural fragility, God Modules, and cyclic coupling using real NetworkX centrality and density metrics.
+- **Modernization Mission Control:** A high-end observability interface where the dependency graph dominates the workflow.
+- **Institutional Memory Recovery:** Turns undocumented codebases into observable architectural knowledge with deterministic confidence.
 
 ## Visual Philosophy: Mission Control
 
 Aegis is designed with a cinematic, high-end observability aesthetic. The interface feels alive—pulsing with system activity and illuminating architectural density through motion and light.
 
-- **Cinematic Dependency Graphs:** Interactive, glowing topologies with animated data flow.
-- **Interactive Blast Radius:** Click any node to see its operational impact propagate through the system.
-- **Fragility Heatmaps:** Instant visibility into technical debt and modernization hotspots.
+- **Hierarchical Dependency Graphs:** Interactive, glowing topologies with automated layered layouts.
+- **Recursive Blast Radius:** Click any node to witness its operational impact propagate transitively through the entire system.
+- **Semantic Node Categorization:** Instant visibility into Service Layers, Infrastructure, and Utilities through visual hierarchy.
 
 ## Architecture
 

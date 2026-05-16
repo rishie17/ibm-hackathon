@@ -24,46 +24,25 @@ export function AegisEdge({
     targetPosition
   });
 
+  const strokeColor = selected 
+    ? "rgba(251, 191, 36, 0.7)" // amber-400
+    : animated 
+    ? "rgba(96, 165, 250, 0.5)" // blue-400
+    : "rgba(255, 255, 255, 0.08)";
+
   return (
-    <>
-      {/* Background glow for selected/animated edges */}
-      {(selected || animated) && (
-        <path
-          id={`${id}-glow`}
-          style={{
-            ...style,
-            strokeWidth: selected ? 6 : 4,
-            stroke: selected ? "var(--warning)" : "var(--accent)",
-            opacity: 0.15,
-            filter: "blur(4px)"
-          }}
-          className="react-flow__edge-path"
-          d={edgePath}
-          fill="none"
-        />
-      )}
-      
-      <BaseEdge 
-        path={edgePath} 
-        markerEnd={markerEnd} 
-        style={{
-          ...style,
-          stroke: selected ? "var(--warning)" : animated ? "var(--accent)" : "var(--line)",
-          strokeWidth: selected ? 2.5 : animated ? 2 : 1.5,
-          transition: "stroke 0.3s, stroke-width 0.3s"
-        }} 
-      />
-      
-      {/* Animated particle flow */}
-      {(animated || selected) && (
-        <circle r="2" fill={selected ? "var(--warning)" : "var(--accent)"}>
-          <animateMotion
-            dur={selected ? "1.5s" : "3s"}
-            repeatCount="indefinite"
-            path={edgePath}
-          />
-        </circle>
-      )}
-    </>
+    <path
+      id={id}
+      style={{
+        ...style,
+        stroke: strokeColor,
+        strokeWidth: selected ? 2 : 1.5,
+        transition: "stroke 0.3s ease, stroke-width 0.3s ease",
+        fill: "none"
+      }}
+      className={`react-flow__edge-path ${animated && !selected ? "animate-pulse" : ""}`}
+      d={edgePath}
+      markerEnd={markerEnd}
+    />
   );
 }

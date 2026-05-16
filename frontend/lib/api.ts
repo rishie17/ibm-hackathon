@@ -1,4 +1,4 @@
-import type { AnalysisResponse, TraceResponse } from "@/types/aegis";
+import type { AnalysisResponse, BlastRadiusResponse, TraceResponse } from "@/types/aegis";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8000";
 
@@ -28,6 +28,16 @@ export async function traceFlow(query: string): Promise<TraceResponse> {
     throw new Error("Flow tracing failed");
   }
 
+  return response.json();
+}
+
+export async function fetchBlastRadius(nodeId: string): Promise<BlastRadiusResponse> {
+  const response = await fetch(`${API_BASE}/api/blast-radius/${encodeURIComponent(nodeId)}`);
+  
+  if (!response.ok) {
+    throw new Error("Blast radius computation failed");
+  }
+  
   return response.json();
 }
 

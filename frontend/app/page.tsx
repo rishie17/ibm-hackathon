@@ -47,7 +47,7 @@ export default function Home() {
       const result = await analyzeRepository(repoPath);
       setAnalysis(result);
       setTrace(null);
-      setStatus("Repository intelligence map generated");
+      setStatus("Intelligence map generated");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Analysis failed");
     } finally {
@@ -58,11 +58,11 @@ export default function Home() {
   async function handleTrace(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsLoading(true);
-    setStatus("Tracing flow...");
+    setStatus("Tracing dependencies...");
     try {
       const result = await traceFlow(query);
       setTrace(result);
-      setStatus("Flow trace complete");
+      setStatus("Trace complete");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Trace failed");
     } finally {
@@ -71,141 +71,125 @@ export default function Home() {
   }
 
   const highlightedFiles = trace?.impacted_files ?? [];
-  const languageSummary = Object.entries(analysis.summary.languages)
-    .map(([language, count]) => `${language}: ${count}`)
-    .join(" - ");
 
   return (
-    <main className="aegis-shell">
-      <div className="mx-auto flex max-w-[1600px] flex-col gap-8 px-6 py-8 lg:px-12">
-        <header className="flex flex-col gap-6 border-b border-white/5 pb-8 lg:flex-row lg:items-end lg:justify-between">
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-          >
-            <div className="flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-teal-300/80 font-bold">
-              <Compass className="h-3.5 w-3.5" />
-              Aegis Intelligence
-            </div>
-            <h1 className="mt-4 text-5xl font-bold tracking-tight text-white lg:text-7xl">
-              Modernization <span className="text-teal-300/20">/</span> Observability
-            </h1>
-            <p className="mt-4 max-w-2xl text-lg leading-relaxed text-slate-400">
-              Transforming complex legacy repositories into understandable operational structures.
-              Identify risk, trace behavior, and modernize with confidence.
-            </p>
-          </motion.div>
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="glass-panel px-5 py-3 text-xs font-mono tracking-widest text-teal-300 border-teal-500/20"
-          >
-            SYSTEM_STATUS: {status.toUpperCase()}
-          </motion.div>
-        </header>
-
-        <section className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
-          <form onSubmit={handleAnalyze} className="glass-panel p-6 group">
-            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 group-focus-within:text-teal-400 transition-colors" htmlFor="repo-path">
-              Target Repository Path
-            </label>
-            <div className="mt-4 flex flex-col gap-4 sm:flex-row">
-              <input
-                id="repo-path"
-                value={repoPath}
-                onChange={(event) => setRepoPath(event.target.value)}
-                className="h-12 flex-1 rounded bg-white/5 border border-white/10 px-4 text-sm text-white outline-none transition focus:border-teal-500/50 focus:bg-white/10"
-                placeholder="e.g. C:\Users\dev\project"
-              />
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="inline-flex h-12 items-center justify-center gap-2 rounded bg-teal-500 px-8 text-xs font-bold uppercase tracking-widest text-slate-950 transition hover:bg-teal-400 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <Map className="h-4 w-4" />
-                Initialize Scan
-              </button>
-            </div>
-          </form>
-
-          <form onSubmit={handleTrace} className="glass-panel p-6 group">
-            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 group-focus-within:text-amber-400 transition-colors" htmlFor="query">
-              Operational Flow Query
-            </label>
-            <div className="mt-4 flex flex-col gap-4 sm:flex-row">
-              <input
-                id="query"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                className="h-12 flex-1 rounded bg-white/5 border border-white/10 px-4 text-sm text-white outline-none transition focus:border-amber-500/50 focus:bg-white/10"
-              />
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="inline-flex h-12 items-center justify-center gap-2 rounded bg-amber-500 px-8 text-xs font-bold uppercase tracking-widest text-slate-950 transition hover:bg-amber-400 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <Search className="h-4 w-4" />
-                Trace Flow
-              </button>
-            </div>
-          </form>
-        </section>
-
-        <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-          <MetricCard label="System Modules" value={analysis.summary.files_analyzed} detail={languageSummary || "Awaiting scan..."} tone="accent" />
-          <MetricCard label="Logic Volume" value={analysis.summary.total_lines.toLocaleString()} detail="Total source lines detected" />
-          <MetricCard label="Technical Pressure" value={analysis.debt.debt_score} detail="Structural fragility index" tone="warning" />
-          <MetricCard label="Modernization Drift" value={`${analysis.debt.modernization_readiness}%`} detail="Readiness for cloud/modular evolution" tone="accent" />
-        </section>
-
-        <section className="grid gap-6 xl:grid-cols-[1fr_420px]">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            transition={{ delay: 0.2, duration: 0.8 }}
-            className="space-y-6"
-          >
-            <div className="flex flex-col gap-4 glass-panel p-5 lg:flex-row lg:items-center lg:justify-between border-teal-500/10">
-              <div>
-                <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-teal-400">
-                  <GitPullRequestArrow className="h-3 w-3" />
-                  System Topology Map
-                </div>
-                <p className="mt-2 text-sm font-mono text-slate-400">{analysis.summary.root}</p>
+    <main className="aegis-shell min-h-screen">
+      <div className="flex flex-col h-screen max-h-screen overflow-hidden">
+        {/* Compact Header */}
+        <header className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-slate-950/50 backdrop-blur-md z-10">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3">
+              <div className="h-6 w-6 rounded bg-teal-500 flex items-center justify-center">
+                <Compass className="h-4 w-4 text-slate-950" />
               </div>
-              <div className="text-[10px] font-mono tracking-widest text-slate-500 bg-white/5 px-3 py-1 rounded">
-                {analysis.graph.nodes.length} NODES <span className="text-white/10 mx-1">|</span> {analysis.graph.edges.length} EDGES
-              </div>
+              <h1 className="text-xl font-bold tracking-tight text-white uppercase">
+                Aegis <span className="text-white/20 font-light">//</span> Mission Control
+              </h1>
             </div>
             
-            <DependencyGraph graph={analysis.graph} highlightedFiles={highlightedFiles} />
+            <form onSubmit={handleAnalyze} className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-sm px-3 py-1.5 focus-within:border-teal-500/50 transition-all">
+              <Map className="h-3 w-3 text-slate-500" />
+              <input
+                value={repoPath}
+                onChange={(e) => setRepoPath(e.target.value)}
+                className="bg-transparent text-xs text-white outline-none w-64"
+                placeholder="Target repository path..."
+              />
+              <button type="submit" disabled={isLoading} className="text-[10px] font-bold uppercase tracking-widest text-teal-400 hover:text-teal-300 disabled:opacity-50">
+                Scan
+              </button>
+            </form>
+
+            <form onSubmit={handleTrace} className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-sm px-3 py-1.5 focus-within:border-amber-500/50 transition-all">
+              <Search className="h-3 w-3 text-slate-500" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="bg-transparent text-xs text-white outline-none w-64"
+                placeholder="Trace operational flow..."
+              />
+              <button type="submit" disabled={isLoading} className="text-[10px] font-bold uppercase tracking-widest text-amber-400 hover:text-amber-300 disabled:opacity-50">
+                Trace
+              </button>
+            </form>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="text-[10px] font-mono tracking-widest text-slate-500 uppercase border-r border-white/10 pr-4">
+              STATUS: <span className="text-teal-400">{status}</span>
+            </div>
+            <div className="flex gap-2">
+              <div className="h-2 w-2 rounded-full bg-teal-500 animate-pulse" />
+              <div className="h-2 w-2 rounded-full bg-slate-800" />
+              <div className="h-2 w-2 rounded-full bg-slate-800" />
+            </div>
+          </div>
+        </header>
+
+        {/* Main Operational Area */}
+        <div className="flex flex-1 overflow-hidden">
+          {/* Central Topology View */}
+          <div className="flex-1 relative bg-[#0f1115]">
+            <div className="absolute top-4 left-6 z-10">
+              <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 mb-1">Topology Workspace</div>
+              <div className="text-xs font-mono text-slate-400">{analysis.summary.root}</div>
+            </div>
+
+            <div className="absolute top-4 right-6 z-10 flex gap-4">
+               <div className="glass-panel px-3 py-1.5 flex flex-col items-center min-w-[80px]">
+                 <span className="text-[8px] font-bold text-slate-500 uppercase">Nodes</span>
+                 <span className="text-sm font-mono text-slate-200">{analysis.graph.nodes.length}</span>
+               </div>
+               <div className="glass-panel px-3 py-1.5 flex flex-col items-center min-w-[80px]">
+                 <span className="text-[8px] font-bold text-slate-500 uppercase">Edges</span>
+                 <span className="text-sm font-mono text-slate-200">{analysis.graph.edges.length}</span>
+               </div>
+            </div>
+
+            <div className="h-full w-full">
+              <DependencyGraph graph={analysis.graph} highlightedFiles={highlightedFiles} />
+            </div>
 
             {trace && (
-              <motion.section 
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                className="glass-panel p-6 border-amber-500/30 overflow-hidden"
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="absolute bottom-6 left-6 right-6 max-h-48 glass-panel border-amber-500/30 p-4 overflow-y-auto z-10"
               >
-                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400">Operational Flow Reconstruction</div>
-                <p className="mt-4 text-base leading-relaxed text-slate-300 italic">"{trace.summary}"</p>
-                <div className="mt-8 grid gap-4 md:grid-cols-2">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400">Dependency Flow Path</div>
+                  <button onClick={() => setTrace(null)} className="text-[10px] text-slate-500 hover:text-white uppercase">Close</button>
+                </div>
+                <div className="flex gap-4 overflow-x-auto pb-2">
                   {trace.steps.map((step, idx) => (
-                    <div key={step.file} className="glass-panel p-4 border-white/5 bg-white/[0.02] hover:bg-white/[0.05] transition-colors group">
-                      <div className="flex items-center gap-3">
-                        <span className="text-[10px] font-mono text-slate-600 group-hover:text-amber-500/50 transition-colors">0{idx + 1}</span>
-                        <div className="truncate text-xs font-bold tracking-wider text-white uppercase">{step.file}</div>
-                      </div>
-                      <div className="mt-3 text-sm leading-relaxed text-slate-400 group-hover:text-slate-300 transition-colors">{step.reason}</div>
+                    <div key={step.file} className="min-w-[200px] glass-panel p-3 border-white/5 bg-white/[0.02]">
+                       <div className="flex items-center gap-2 mb-2">
+                         <span className="text-[9px] font-mono text-slate-600">0{idx + 1}</span>
+                         <div className="truncate text-[10px] font-bold text-white uppercase">{step.file.split('/').pop()}</div>
+                       </div>
+                       <div className="text-[10px] text-slate-500 line-clamp-2 leading-relaxed">{step.reason}</div>
                     </div>
                   ))}
                 </div>
-              </motion.section>
+              </motion.div>
             )}
-          </motion.div>
+          </div>
 
-          <AnalysisPanel debt={analysis.debt} modernization={analysis.modernization} />
-        </section>
+          {/* Side Intelligence Panel */}
+          <aside className="w-[400px] border-l border-white/5 bg-slate-950/40 backdrop-blur-xl overflow-y-auto p-6 space-y-8">
+            <section>
+              <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 mb-6 border-b border-white/5 pb-2">System Metrics</div>
+              <div className="grid grid-cols-2 gap-4">
+                <MetricCard label="Modules" value={analysis.summary.files_analyzed} detail="Source Files" tone="accent" />
+                <MetricCard label="Volume" value={`${(analysis.summary.total_lines / 1000).toFixed(1)}k`} detail="Lines of Code" />
+                <MetricCard label="Pressure" value={analysis.debt.debt_score} detail="Graph Fragility" tone="warning" />
+                <MetricCard label="Readiness" value={`${analysis.debt.modernization_readiness}%`} detail="Modernization" tone="accent" />
+              </div>
+            </section>
+
+            <AnalysisPanel debt={analysis.debt} modernization={analysis.modernization} />
+          </aside>
+        </div>
       </div>
     </main>
   );

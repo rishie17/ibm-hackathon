@@ -7,6 +7,7 @@ from app.graph.graph_builder import DependencyGraphBuilder
 from app.models.schemas import (
     AnalysisResponse,
     AnalyzeRepositoryRequest,
+    BlastRadiusResponse,
     GraphResponse,
     ModernizationResponse,
     RepositoryAnalysis,
@@ -64,8 +65,49 @@ class AnalysisService:
     def get_modernization(self) -> ModernizationResponse:
         return self._modernization
 
+    def compute_blast_radius(self, node_id: str, depth: int = 3) -> BlastRadiusResponse:
+        if node_id not in self._graph:
+            return BlastRadiusResponse(
+                root_id=node_id, impacted_nodes=[], impacted_edges=[], layers={}, intensity={}
+            )
+
+        # Transitive dependencies (successors in the graph)
+        # We use BFS to capture layers
+        impacted_nodes = {node_id}
+        impacted_edges = []
+        layers = {node_id: 0}
+        intensity = {node_id: 1.0}
+
+        queue = [(node_id, 0)]
+        visited = {node_id}
+
+        while queue:
+            current, d = queue.pop(0)
+            if d >= depth:
+                continue
+
+            for successor in self._graph.successors(current):
+                edge_id = f"{current}->{successor}"
+                impacted_edges.append(edge_id)
+                
+                if successor not in visited:
+                    visited.add(successor)
+                    impacted_nodes.add(successor)
+                    layers[successor] = d + 1
+                    # Intensity decays with distance
+                    intensity[successor] = round(1.0 / (d + 2), 2)
+                    queue.append((successor, d + 1))
+
+        return BlastRadiusResponse(
+            root_id=node_id,
+            impacted_nodes=list(impacted_nodes),
+            impacted_edges=impacted_edges,
+            layers=layers,
+            intensity=intensity,
+        )
+
     def trace_flow(self, query: str) -> TraceResponse:
-        if self._analysis is None:
+        if self._analysis is None or self._graph.number_of_nodes() == 0:
             return TraceResponse(
                 query=query,
                 summary="Analyze a repository before tracing flows.",
@@ -73,38 +115,62 @@ class AnalysisService:
                 impacted_files=[],
             )
 
+        # 1. Find the most relevant "entry point" node based on query
+        # We still use a bit of keyword matching to find the START node
         terms = {term.lower() for term in query.replace("_", " ").split() if len(term) > 2}
-        ranked = []
-        for file in self._analysis.files:
-            haystack = " ".join([file.path, *file.imports, *file.functions]).lower()
-            score = sum(1 for term in terms if term in haystack)
-            if score:
-                ranked.append((score, file))
+        best_node = None
+        max_score = -1
+        
+        for node in self._graph.nodes:
+            score = sum(1 for term in terms if term in node.lower())
+            if score > max_score:
+                max_score = score
+                best_node = node
 
-        ranked.sort(key=lambda item: (item[0], item[1].lines), reverse=True)
-        selected = [file for _, file in ranked[:6]]
+        if not best_node or max_score == 0:
+            return TraceResponse(
+                query=query,
+                summary="No matching entry point found. Try a specific module or feature name.",
+                steps=[],
+                impacted_files=[],
+            )
 
-        impacted = set(file.path for file in selected)
-        for file in selected:
-            impacted.update(self._graph.successors(file.path))
-            impacted.update(self._graph.predecessors(file.path))
+        # 2. Trace deterministic dependency chain
+        # Show what this module depends on (downstream) and what depends on it (upstream)
+        upstream = list(self._graph.predecessors(best_node))[:3]
+        downstream = list(self._graph.successors(best_node))[:3]
+        
+        steps = []
+        
+        # Upstream (Consumers)
+        for u in upstream:
+            steps.append(TraceStep(
+                file=u,
+                reason=f"Consumer of {best_node.split('/')[-1]} - likely part of the orchestrating flow.",
+                related_imports=[]
+            ))
+            
+        # The Anchor
+        steps.append(TraceStep(
+            file=best_node,
+            reason=f"Primary matching entry point for '{query}'.",
+            related_imports=self._graph.nodes[best_node]["file"].imports[:5]
+        ))
+        
+        # Downstream (Dependencies)
+        for d in downstream:
+            steps.append(TraceStep(
+                file=d,
+                reason=f"Dependency of {best_node.split('/')[-1]} - provides lower-level implementation.",
+                related_imports=[]
+            ))
 
-        # TODO(IBM Bob): replace keyword ranking with Bob full-context flow reasoning.
+        impacted = {best_node, *upstream, *downstream}
+        
         return TraceResponse(
             query=query,
-            summary=(
-                f"Found {len(selected)} likely flow entry points using file names, imports, and functions."
-                if selected
-                else "No direct matches found. Try querying a feature, module, or function name from the repository."
-            ),
-            steps=[
-                TraceStep(
-                    file=file.path,
-                    reason="Matched query terms against module path, imports, or function names.",
-                    related_imports=file.imports[:8],
-                )
-                for file in selected
-            ],
+            summary=f"Reconstructed dependency chain centered around {best_node.split('/')[-1]}.",
+            steps=steps,
             impacted_files=sorted(impacted),
         )
 

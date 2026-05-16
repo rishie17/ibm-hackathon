@@ -8,7 +8,7 @@ class DependencyGraphBuilder:
         graph = nx.DiGraph()
 
         for file in analysis.files:
-            risk = self._node_risk(file.lines, len(file.imports))
+            risk = self._node_risk(file.lines, len(file.imports) + len(file.instantiations))
             graph.add_node(file.path, label=file.path.split("/")[-1], risk=risk, file=file)
 
         for dependency in analysis.dependencies:
@@ -19,21 +19,48 @@ class DependencyGraphBuilder:
                 weight=dependency.weight,
             )
 
-        response = GraphResponse(
-            nodes=[
+        # Compute graph-wide metrics
+        centrality = nx.degree_centrality(graph) if graph.number_of_nodes() > 0 else {}
+        
+        # Calculate hierarchy levels (Topological Sort / Longest Path approximation)
+        # To avoid cycles breaking it, we can just do a simple BFS from roots (in-degree == 0)
+        # or just use topological generations if DAG.
+        levels = {}
+        try:
+            for i, generation in enumerate(nx.topological_generations(graph)):
+                for node in generation:
+                    levels[node] = i
+        except nx.NetworkXUnfeasible:
+            # Graph has cycles, fallback to 0
+            levels = {node: 0 for node in graph.nodes}
+
+        nodes = []
+        for node, data in graph.nodes(data=True):
+            node_type = self._determine_node_type(node, data, graph)
+            file_data = data["file"]
+            nodes.append(
                 GraphNode(
                     id=node,
                     label=data["label"],
-                    type="hotspot" if data["risk"] >= 0.75 else "module",
+                    type=node_type,
                     risk=round(data["risk"], 2),
                     metadata={
-                        "lines": data["file"].lines,
-                        "imports": len(data["file"].imports),
-                        "language": data["file"].language,
+                        "lines": file_data.lines,
+                        "imports": len(file_data.imports),
+                        "instantiations": len(file_data.instantiations),
+                        "language": file_data.language,
+                        "centrality": round(centrality.get(node, 0), 3),
+                        "in_degree": graph.in_degree(node),
+                        "out_degree": graph.out_degree(node),
+                        "hierarchy_level": levels.get(node, 0),
+                        "classes": len(file_data.classes),
+                        "functions": len(file_data.functions)
                     },
                 )
-                for node, data in graph.nodes(data=True)
-            ],
+            )
+
+        response = GraphResponse(
+            nodes=nodes,
             edges=[
                 GraphEdge(
                     id=f"{source}->{target}",
@@ -46,6 +73,31 @@ class DependencyGraphBuilder:
             ],
         )
         return graph, response
+
+    def _determine_node_type(self, path: str, data: dict, graph: nx.DiGraph) -> str:
+        path_lower = path.lower()
+        file_lang = data["file"].language
+        
+        if file_lang in ("verilog", "systemverilog"):
+            return "hardware"
+            
+        if data["risk"] >= 0.8:
+            return "hotspot"
+            
+        if any(term in path_lower for term in ["api", "service", "route", "controller"]):
+            return "service"
+            
+        if any(term in path_lower for term in ["util", "helper", "common", "shared"]):
+            return "utility"
+            
+        if any(term in path_lower for term in ["db", "storage", "graph", "client", "infra"]):
+            return "infrastructure"
+            
+        # Fallback based on connectivity
+        if graph.in_degree(path) > 5:
+            return "service"
+            
+        return "module"
 
     def _node_risk(self, lines: int, imports: int) -> float:
         size_pressure = min(lines / 500, 1.0)

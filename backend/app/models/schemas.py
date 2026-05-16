@@ -1,10 +1,11 @@
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
 
-SupportedLanguage = Literal["python", "javascript", "typescript", "unknown"]
+SupportedLanguage = Literal["python", "javascript", "typescript", "verilog", "systemverilog", "unknown"]
+RelationshipType = Literal["imports", "instantiates", "calls", "owns", "references", "inherits", "routes_to", "inferred"]
 
 
 class AnalyzeRepositoryRequest(BaseModel):
@@ -21,22 +22,30 @@ class FileNode(BaseModel):
     size_bytes: int
     lines: int
     imports: list[str] = Field(default_factory=list)
+    exports: list[str] = Field(default_factory=list)
+    classes: list[str] = Field(default_factory=list)
     functions: list[str] = Field(default_factory=list)
+    instantiations: list[str] = Field(default_factory=list)
+    module_defs: list[str] = Field(default_factory=list)
 
 
 class DependencyEdge(BaseModel):
     source: str
     target: str
-    relationship: Literal["imports", "references", "inferred"] = "imports"
+    relationship: RelationshipType = "imports"
     weight: int = 1
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class GraphNode(BaseModel):
     id: str
     label: str
-    type: Literal["module", "service", "folder", "hotspot"] = "module"
+    type: str = "module"
+    category: str = ""
+    ownership: str = ""
+    level: int = 0
     risk: float = 0.0
-    metadata: dict[str, str | int | float] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class GraphEdge(BaseModel):
@@ -101,6 +110,14 @@ class TraceResponse(BaseModel):
     summary: str
     steps: list[TraceStep]
     impacted_files: list[str]
+
+
+class BlastRadiusResponse(BaseModel):
+    root_id: str
+    impacted_nodes: list[str]
+    impacted_edges: list[str]
+    layers: dict[str, int]  # nodeId -> distance from root
+    intensity: dict[str, float]  # nodeId -> impact score
 
 
 class AnalysisResponse(BaseModel):
