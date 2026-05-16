@@ -32,13 +32,14 @@ const edgeTypes = {
   aegisEdge: AegisEdge
 };
 
-const NODE_WIDTH = 240;
-const NODE_HEIGHT = 90;
+const NODE_WIDTH = 280;
+const NODE_HEIGHT = 120;
 
 const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = "TB") => {
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
-  dagreGraph.setGraph({ rankdir: direction, ranksep: 160, nodesep: 100 });
+  // Extreme spacing for cinematic rhythm
+  dagreGraph.setGraph({ rankdir: direction, ranksep: 240, nodesep: 140 });
 
   nodes.forEach((node) => {
     dagreGraph.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
@@ -177,6 +178,9 @@ export function DependencyGraph({ graph, highlightedFiles }: DependencyGraphProp
 
   return (
     <div className="h-full w-full overflow-hidden bg-transparent relative">
+      {/* Cinematic Depth Layer */}
+      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_50%_50%,rgba(41,37,36,0.3)_0%,transparent_100%)]" />
+      
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -186,19 +190,22 @@ export function DependencyGraph({ graph, highlightedFiles }: DependencyGraphProp
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
-        minZoom={0.1}
-        maxZoom={1.2}
+        minZoom={0.02}
+        maxZoom={1}
       >
-        <Background color="rgba(255,255,255,0.05)" gap={24} size={1} />
         <MiniMap 
-          nodeStrokeWidth={2} 
-          pannable 
+          nodeStrokeWidth={0} 
           zoomable 
-          nodeColor={(n) => (n.data.type === "hotspot" ? "#f87171" : "#334155")}
-          maskColor="rgba(15, 23, 42, 0.8)"
-          style={{ background: "rgba(15, 23, 42, 0.9)", border: "1px solid rgba(255,255,255,0.08)" }}
+          nodeColor={() => "#44403c"}
+          maskColor="rgba(18, 16, 14, 0.8)"
+          style={{ 
+            background: "rgba(28, 25, 23, 0.4)", 
+            border: "1px solid rgba(120, 113, 108, 0.1)", 
+            borderRadius: "0px",
+            backdropFilter: "blur(20px)"
+          }}
         />
-        <Controls />
+        <Controls className="!bg-stone-900/40 !border-stone-800/40 !shadow-none !rounded-none !bottom-10 !left-10" />
       </ReactFlow>
     </div>
   );

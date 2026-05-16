@@ -6,7 +6,6 @@ import { FormEvent, useState } from "react";
 
 import { AnalysisPanel } from "@/components/AnalysisPanel";
 import { DependencyGraph } from "@/components/DependencyGraph";
-import { MetricCard } from "@/components/MetricCard";
 import { analyzeRepository, traceFlow } from "@/lib/api";
 import type { AnalysisResponse, TraceResponse } from "@/types/aegis";
 
@@ -73,124 +72,122 @@ export default function Home() {
   const highlightedFiles = trace?.impacted_files ?? [];
 
   return (
-    <main className="aegis-shell min-h-screen">
-      <div className="flex flex-col h-screen max-h-screen overflow-hidden">
-        {/* Compact Header */}
-        <header className="flex items-center justify-between px-6 py-3 border-b border-white/5 bg-slate-950/50 backdrop-blur-md z-10">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-3">
-              <div className="h-6 w-6 rounded bg-teal-500 flex items-center justify-center">
-                <Compass className="h-4 w-4 text-slate-950" />
+    <main className="aegis-shell min-h-screen bg-[#12100e] text-stone-200 overflow-hidden selection:bg-stone-500/30">
+      <div className="flex flex-col h-screen relative">
+        
+        {/* Cinematic Navigation Overlay */}
+        <header className="absolute top-0 left-0 right-0 p-8 flex items-start justify-between pointer-events-none z-50">
+          <div className="flex flex-col gap-6 pointer-events-auto">
+            <div className="flex items-center gap-4">
+              <div className="h-10 w-10 bg-stone-100 flex items-center justify-center rounded-sm shadow-2xl">
+                <Compass className="h-6 w-6 text-stone-900" />
               </div>
-              <h1 className="text-xl font-bold tracking-tight text-white uppercase">
-                Aegis <span className="text-white/20 font-light">//</span> Mission Control
-              </h1>
+              <div>
+                <h1 className="text-xl font-medium tracking-tight text-stone-100">AEGIS</h1>
+                <div className="editorial-label -mt-1 opacity-40">System Atlas</div>
+              </div>
             </div>
-            
-            <form onSubmit={handleAnalyze} className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-sm px-3 py-1.5 focus-within:border-teal-500/50 transition-all">
-              <Map className="h-3 w-3 text-slate-500" />
-              <input
-                value={repoPath}
-                onChange={(e) => setRepoPath(e.target.value)}
-                className="bg-transparent text-xs text-white outline-none w-64"
-                placeholder="Target repository path..."
-              />
-              <button type="submit" disabled={isLoading} className="text-[10px] font-bold uppercase tracking-widest text-teal-400 hover:text-teal-300 disabled:opacity-50">
-                Scan
-              </button>
-            </form>
 
-            <form onSubmit={handleTrace} className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-sm px-3 py-1.5 focus-within:border-amber-500/50 transition-all">
-              <Search className="h-3 w-3 text-slate-500" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className="bg-transparent text-xs text-white outline-none w-64"
-                placeholder="Trace operational flow..."
-              />
-              <button type="submit" disabled={isLoading} className="text-[10px] font-bold uppercase tracking-widest text-amber-400 hover:text-amber-300 disabled:opacity-50">
-                Trace
-              </button>
-            </form>
+            <div className="flex flex-col gap-2">
+              <form onSubmit={handleAnalyze} className="group flex items-center bg-stone-900/60 backdrop-blur-3xl border border-stone-800/40 p-1.5 focus-within:border-stone-700/60 transition-all">
+                <input
+                  value={repoPath}
+                  onChange={(e) => setRepoPath(e.target.value)}
+                  className="bg-transparent text-xs text-stone-300 outline-none w-64 px-3 placeholder:text-stone-700"
+                  placeholder="Analyze source..."
+                />
+                <button type="submit" disabled={isLoading} className="editorial-label px-3 py-1.5 hover:text-stone-100 transition-colors pointer-events-auto">
+                  Scan
+                </button>
+              </form>
+
+              <form onSubmit={handleTrace} className="group flex items-center bg-stone-900/60 backdrop-blur-3xl border border-stone-800/40 p-1.5 focus-within:border-stone-700/60 transition-all">
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="bg-transparent text-xs text-stone-300 outline-none w-64 px-3 placeholder:text-stone-700"
+                  placeholder="Trace path..."
+                />
+                <button type="submit" disabled={isLoading} className="editorial-label px-3 py-1.5 hover:text-stone-100 transition-colors pointer-events-auto">
+                  Trace
+                </button>
+              </form>
+            </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="text-[10px] font-mono tracking-widest text-slate-500 uppercase border-r border-white/10 pr-4">
-              STATUS: <span className="text-teal-400">{status}</span>
-            </div>
-            <div className="flex gap-2">
-              <div className="h-2 w-2 rounded-full bg-teal-500 animate-pulse" />
-              <div className="h-2 w-2 rounded-full bg-slate-800" />
-              <div className="h-2 w-2 rounded-full bg-slate-800" />
+          <div className="pointer-events-auto">
+            <div className="bg-stone-900/40 backdrop-blur-xl border border-stone-800/40 px-4 py-2 flex items-center gap-4">
+              <div className="editorial-label text-[9px] opacity-40">{status}</div>
+              <div className="w-1.5 h-1.5 rounded-full bg-stone-500 animate-pulse" />
             </div>
           </div>
         </header>
 
-        {/* Main Operational Area */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* Central Topology View */}
-          <div className="flex-1 relative bg-[#0f1115]">
-            <div className="absolute top-4 left-6 z-10">
-              <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 mb-1">Topology Workspace</div>
-              <div className="text-xs font-mono text-slate-400">{analysis.summary.root}</div>
-            </div>
-
-            <div className="absolute top-4 right-6 z-10 flex gap-4">
-               <div className="glass-panel px-3 py-1.5 flex flex-col items-center min-w-[80px]">
-                 <span className="text-[8px] font-bold text-slate-500 uppercase">Nodes</span>
-                 <span className="text-sm font-mono text-slate-200">{analysis.graph.nodes.length}</span>
-               </div>
-               <div className="glass-panel px-3 py-1.5 flex flex-col items-center min-w-[80px]">
-                 <span className="text-[8px] font-bold text-slate-500 uppercase">Edges</span>
-                 <span className="text-sm font-mono text-slate-200">{analysis.graph.edges.length}</span>
-               </div>
-            </div>
-
-            <div className="h-full w-full">
-              <DependencyGraph graph={analysis.graph} highlightedFiles={highlightedFiles} />
-            </div>
-
-            {trace && (
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="absolute bottom-6 left-6 right-6 max-h-48 glass-panel border-amber-500/30 p-4 overflow-y-auto z-10"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400">Dependency Flow Path</div>
-                  <button onClick={() => setTrace(null)} className="text-[10px] text-slate-500 hover:text-white uppercase">Close</button>
-                </div>
-                <div className="flex gap-4 overflow-x-auto pb-2">
-                  {trace.steps.map((step, idx) => (
-                    <div key={step.file} className="min-w-[200px] glass-panel p-3 border-white/5 bg-white/[0.02]">
-                       <div className="flex items-center gap-2 mb-2">
-                         <span className="text-[9px] font-mono text-slate-600">0{idx + 1}</span>
-                         <div className="truncate text-[10px] font-bold text-white uppercase">{step.file.split('/').pop()}</div>
-                       </div>
-                       <div className="text-[10px] text-slate-500 line-clamp-2 leading-relaxed">{step.reason}</div>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
+        {/* Primary Visual Scene */}
+        <div className="flex-1 relative bg-[#12100e]">
+          <div className="h-full w-full">
+            <DependencyGraph graph={analysis.graph} highlightedFiles={highlightedFiles} />
           </div>
 
-          {/* Side Intelligence Panel */}
-          <aside className="w-[400px] border-l border-white/5 bg-slate-950/40 backdrop-blur-xl overflow-y-auto p-6 space-y-8">
-            <section>
-              <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 mb-6 border-b border-white/5 pb-2">System Metrics</div>
-              <div className="grid grid-cols-2 gap-4">
-                <MetricCard label="Modules" value={analysis.summary.files_analyzed} detail="Source Files" tone="accent" />
-                <MetricCard label="Volume" value={`${(analysis.summary.total_lines / 1000).toFixed(1)}k`} detail="Lines of Code" />
-                <MetricCard label="Pressure" value={analysis.debt.debt_score} detail="Graph Fragility" tone="warning" />
-                <MetricCard label="Readiness" value={`${analysis.debt.modernization_readiness}%`} detail="Modernization" tone="accent" />
+          {/* Asymmetrical Floating Intelligence */}
+          <aside className="absolute top-32 right-12 bottom-12 w-[380px] pointer-events-none flex flex-col gap-8 z-40">
+            <section className="pointer-events-auto floating-artifact p-8 space-y-10 overflow-y-auto custom-scrollbar">
+              <div className="space-y-8">
+                <div>
+                  <div className="editorial-label opacity-40 mb-4 border-b border-stone-800/60 pb-2">Topology Data</div>
+                  <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+                    <Stat label="Files" value={analysis.summary.files_analyzed} />
+                    <Stat label="Volume" value={`${(analysis.summary.total_lines / 1000).toFixed(1)}k`} />
+                    <Stat label="Density" value={analysis.debt.debt_score} />
+                    <Stat label="Readiness" value={`${analysis.debt.modernization_readiness}%`} />
+                  </div>
+                </div>
+
+                <AnalysisPanel debt={analysis.debt} modernization={analysis.modernization} />
               </div>
             </section>
-
-            <AnalysisPanel debt={analysis.debt} modernization={analysis.modernization} />
+            
+            <div className="pointer-events-auto bg-stone-900/40 backdrop-blur-xl border border-stone-800/20 p-6">
+               <div className="editorial-label opacity-30 mb-2">Root Reference</div>
+               <div className="text-[10px] font-mono text-stone-600 truncate">{analysis.summary.root}</div>
+            </div>
           </aside>
+
+          {/* Immersive Flow Display */}
+          {trace && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="absolute bottom-12 left-12 right-[460px] floating-artifact p-8 pointer-events-auto z-40"
+            >
+              <div className="flex items-center justify-between mb-8">
+                <div className="editorial-label text-stone-400">Operational Flow Sequence</div>
+                <button onClick={() => setTrace(null)} className="editorial-label opacity-40 hover:opacity-100 transition-opacity">Close</button>
+              </div>
+              <div className="flex gap-8 overflow-x-auto pb-4 hide-scrollbar">
+                {trace.steps.map((step, idx) => (
+                  <div key={step.file} className="min-w-[240px] space-y-4 group">
+                     <div className="flex items-center gap-3">
+                       <span className="editorial-label text-stone-600">0{idx + 1}</span>
+                       <div className="truncate text-[11px] font-semibold text-stone-300 uppercase tracking-widest">{step.file.split('/').pop()}</div>
+                     </div>
+                     <div className="text-xs text-stone-500 leading-relaxed font-medium group-hover:text-stone-400 transition-colors line-clamp-3 italic">"{step.reason}"</div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
     </main>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="space-y-1">
+      <div className="text-[15px] font-medium text-stone-100 font-mono tracking-tighter">{value}</div>
+      <div className="editorial-label text-[8px] opacity-30">{label}</div>
+    </div>
   );
 }

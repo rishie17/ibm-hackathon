@@ -25,10 +25,10 @@ export function AegisEdge({
   });
 
   const strokeColor = selected 
-    ? "rgba(251, 191, 36, 0.7)" // amber-400
+    ? "#e7e5e4" // stone-200
     : animated 
-    ? "rgba(96, 165, 250, 0.5)" // blue-400
-    : "rgba(255, 255, 255, 0.08)";
+    ? "#57534e" // stone-600
+    : "rgba(120, 113, 108, 0.15)"; // stone-400 at low opacity
 
   return (
     <path
@@ -36,11 +36,12 @@ export function AegisEdge({
       style={{
         ...style,
         stroke: strokeColor,
-        strokeWidth: selected ? 2 : 1.5,
-        transition: "stroke 0.3s ease, stroke-width 0.3s ease",
-        fill: "none"
+        strokeWidth: selected ? 1.5 : 1,
+        transition: "stroke 1s ease, stroke-width 1s ease",
+        fill: "none",
+        opacity: selected ? 1 : 0.6
       }}
-      className={`react-flow__edge-path ${animated && !selected ? "animate-pulse" : ""}`}
+      className="react-flow__edge-path"
       d={edgePath}
       markerEnd={markerEnd}
     />

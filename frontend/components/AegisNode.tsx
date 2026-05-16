@@ -19,12 +19,12 @@ type AegisNodeData = {
 };
 
 const TYPE_CONFIG = {
-  service: { icon: Activity, color: "text-blue-400", label: "Service Layer", border: "border-blue-500/20" },
-  infrastructure: { icon: Database, color: "text-purple-400", label: "Infrastructure", border: "border-purple-500/20" },
-  utility: { icon: Box, color: "text-slate-400", label: "Utility Module", border: "border-slate-500/20" },
-  hotspot: { icon: Cpu, color: "text-rose-400", label: "Critical Hotspot", border: "border-rose-500/30" },
-  hardware: { icon: Microchip, color: "text-emerald-400", label: "Hardware Module", border: "border-emerald-500/20" },
-  module: { icon: Layers, color: "text-slate-300", label: "System Module", border: "border-white/5" }
+  service: { icon: Activity, color: "text-stone-300", bg: "bg-stone-800/40", border: "border-stone-700/50", label: "Service" },
+  infrastructure: { icon: Database, color: "text-stone-400", bg: "bg-stone-800/40", border: "border-stone-700/50", label: "Infra" },
+  utility: { icon: Box, color: "text-stone-500", bg: "bg-stone-800/40", border: "border-stone-700/50", label: "Util" },
+  hotspot: { icon: Cpu, color: "text-stone-200", bg: "bg-stone-800/60", border: "border-stone-600/50", label: "Hotspot" },
+  hardware: { icon: Microchip, color: "text-stone-300", bg: "bg-stone-800/40", border: "border-stone-700/50", label: "Hardware" },
+  module: { icon: Layers, color: "text-stone-400", bg: "bg-stone-800/40", border: "border-stone-700/50", label: "Module" }
 };
 
 export function AegisNode({ data, selected }: { data: AegisNodeData; selected: boolean }) {
@@ -34,48 +34,48 @@ export function AegisNode({ data, selected }: { data: AegisNodeData; selected: b
   
   return (
     <motion.div
-      initial={{ scale: 0.95, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      whileHover={{ scale: 1.01, transition: { duration: 0.15 } }}
-      className={`relative px-4 py-3 rounded-md min-w-[220px] border transition-all duration-300 bg-slate-900/80 backdrop-blur-md ${
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      whileHover={{ y: -1, transition: { duration: 0.3 } }}
+      className={`relative px-5 py-4 min-w-[240px] transition-all duration-500 bg-stone-900/60 backdrop-blur-xl border border-stone-800/40 ${
         selected 
-          ? "border-amber-400/60 shadow-[0_0_12px_rgba(251,191,36,0.1)]" 
+          ? "border-stone-600 shadow-[0_0_30px_rgba(0,0,0,0.4)] z-10" 
           : data.isBlastRadius
-          ? `border-amber-500/${Math.max(20, Math.floor(intensity * 100))}`
-          : config.border
+          ? `border-stone-700 bg-stone-800/20`
+          : "shadow-2xl"
       }`}
     >
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-2">
-          <Icon className={`h-3.5 w-3.5 ${config.color}`} />
-          <span className="text-[10px] font-medium tracking-wide text-slate-400">
+      {/* Visual Anchor Line */}
+      <div className={`absolute left-0 top-0 bottom-0 w-1 ${selected ? "bg-stone-500" : "bg-transparent"} transition-all duration-500`} />
+
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <Icon className={`h-3 w-3 ${config.color} opacity-60`} />
+          <span className="text-[9px] font-semibold tracking-[0.2em] text-stone-500 uppercase">
             {config.label}
           </span>
         </div>
         {data.metadata.centrality !== undefined && data.metadata.centrality > 0.1 && (
-          <div className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm bg-slate-800 border border-slate-700">
-            <Zap className="h-2.5 w-2.5 text-amber-500/80" />
-            <span className="text-[9px] font-mono text-slate-300">CORE</span>
-          </div>
+          <div className="h-1.5 w-1.5 rounded-full bg-stone-600" title="Core Module" />
         )}
       </div>
 
-      <div className="mt-3">
-        <div className={`text-sm font-semibold tracking-tight truncate ${selected ? "text-amber-400" : "text-slate-100"}`}>
+      <div>
+        <div className={`text-sm font-medium tracking-tight ${selected ? "text-stone-100" : "text-stone-300"}`}>
           {data.label}
         </div>
-        <div className="mt-1.5 flex items-center justify-between">
-          <div className="text-[10px] font-mono text-slate-500">
-            {data.metadata.lines.toLocaleString()} LOC
+        <div className="mt-4 flex items-baseline gap-4">
+          <div className="text-[10px] font-mono text-stone-600 tracking-wider">
+            {data.metadata.lines.toLocaleString()}
           </div>
-          <div className="text-[9px] font-mono text-slate-500">
-            IN:{data.metadata.in_degree} OUT:{data.metadata.out_degree}
+          <div className="text-[10px] font-mono text-stone-700">
+            {data.metadata.language.toUpperCase()}
           </div>
         </div>
       </div>
 
-      <Handle type="target" position={Position.Top} className="!bg-slate-500 !border-slate-800 !w-2 !h-2 !rounded-full" />
-      <Handle type="source" position={Position.Bottom} className="!bg-slate-500 !border-slate-800 !w-2 !h-2 !rounded-full" />
+      <Handle type="target" position={Position.Top} className="!bg-stone-800 !border-none !w-full !h-[1px] !top-0 !rounded-none opacity-20" />
+      <Handle type="source" position={Position.Bottom} className="!bg-stone-800 !border-none !w-full !h-[1px] !bottom-0 !rounded-none opacity-20" />
     </motion.div>
   );
 }
